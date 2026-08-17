@@ -1,0 +1,18 @@
+{
+  "name": "คลังพัสดุการไฟฟ้าส่วนภูมิภาค ผปบ.กฟส.ขอนแก่น2",
+  "short_name": "ผปบ.กฟส.ขอนแก่น2",
+  "description": "ระบบเบิกจ่ายพัสดุและตรวจนับคลังเรียลไทม์ ผปบ.กฟส.ขอนแก่น2",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1e1b4b",
+  "theme_color": "#312e81",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%23312e81'/><path d='M256 64 L160 224 H240 L220 448 L352 256 H272 Z' fill='%23f59e0b'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
