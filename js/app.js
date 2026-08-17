@@ -568,55 +568,117 @@ class App {
     }
   }
 
-  // Render Transaction Logs
+  // Render Transaction Logs (Both Desktop Table & Mobile Cards)
   renderLogsTable() {
     const tbody = document.getElementById('logsTableBody');
-    if (!tbody) return;
+    const mobileContainer = document.getElementById('mobileLogsCardsContainer');
+    if (!tbody && !mobileContainer) return;
 
-    const query = (document.getElementById('logSearchInput').value || '').toLowerCase().trim();
+    const query = (document.getElementById('logSearchInput') ? document.getElementById('logSearchInput').value : '').toLowerCase().trim();
     let logs = window.db.getLogs();
 
     if (query) {
       logs = logs.filter(l => 
-        l.code.toLowerCase().includes(query) || 
-        l.name.toLowerCase().includes(query) || 
-        l.requester.toLowerCase().includes(query) || 
-        l.type.toLowerCase().includes(query)
+        (l.code && l.code.toLowerCase().includes(query)) || 
+        (l.name && l.name.toLowerCase().includes(query)) || 
+        (l.requester && l.requester.toLowerCase().includes(query)) || 
+        (l.type && l.type.toLowerCase().includes(query)) ||
+        (l.workOrder && l.workOrder.toLowerCase().includes(query)) ||
+        (l.note && l.note.toLowerCase().includes(query))
       );
     }
 
-    if (logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 24px;">ไม่พบประวัติรายการ</td></tr>`;
-      return;
+    // 1. Render Desktop Table
+    if (tbody) {
+      if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 24px;">ไม่พบประวัติรายการ</td></tr>`;
+      } else {
+        tbody.innerHTML = logs.map(l => {
+          const formattedDate = new Date(l.timestamp).toLocaleString('th-TH');
+          const sigThumb = l.signature 
+            ? `<img src="${l.signature}" style="height: 36px; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer;" onclick="app.viewImage('${l.signature}')">`
+            : '-';
+
+          const photoThumb = l.photo 
+            ? `<img src="${l.photo}" style="height: 36px; width: 36px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.viewImage('${l.photo}')">`
+            : '-';
+
+          const typeBadgeClass = l.type === 'เบิกจ่าย' ? 'badge-warning' : (l.type === 'รับเข้า' ? 'badge-success' : 'badge-info');
+
+          return `
+            <tr>
+              <td style="white-space: nowrap; font-size: 12.5px;">${formattedDate}</td>
+              <td><span class="badge ${typeBadgeClass}">${l.type}</span></td>
+              <td><strong style="font-family: monospace;">${l.code}</strong></td>
+              <td>${l.name}</td>
+              <td style="text-align: center; font-weight: 700;">${l.qty} ${l.unit}</td>
+              <td style="text-align: center; font-size: 12.5px;">${l.balanceBefore} ➔ <strong>${l.balanceAfter}</strong></td>
+              <td>${l.requester}</td>
+              <td style="font-size: 12.5px; font-family: monospace;">${l.workOrder || '-'}</td>
+              <td style="text-align: center;">${sigThumb}</td>
+              <td style="text-align: center;">${photoThumb}</td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
 
-    tbody.innerHTML = logs.map(l => {
-      const formattedDate = new Date(l.timestamp).toLocaleString('th-TH');
-      const sigThumb = l.signature 
-        ? `<img src="${l.signature}" style="height: 36px; border: 1px solid #cbd5e1; border-radius: 4px; cursor: pointer;" onclick="app.viewImage('${l.signature}')">`
-        : '-';
+    // 2. Render Mobile Cards View for Logs
+    if (mobileContainer) {
+      if (logs.length === 0) {
+        mobileContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 28px;">ไม่พบประวัติรายการ</div>`;
+      } else {
+        mobileContainer.innerHTML = logs.map(l => {
+          const formattedDate = new Date(l.timestamp).toLocaleString('th-TH');
+          const typeBadgeClass = l.type === 'เบิกจ่าย' ? 'badge-warning' : (l.type === 'รับเข้า' ? 'badge-success' : 'badge-info');
+          const sigThumb = l.signature 
+            ? `<button class="btn btn-outline btn-sm" onclick="app.viewImage('${l.signature}')" style="font-size: 11.5px; padding: 3px 8px;"><i class="fa-solid fa-signature"></i> ลายเซ็น</button>`
+            : '';
+          const photoThumb = l.photo 
+            ? `<button class="btn btn-outline btn-sm" onclick="app.viewImage('${l.photo}')" style="font-size: 11.5px; padding: 3px 8px;"><i class="fa-solid fa-image"></i> รูปถ่าย</button>`
+            : '';
 
-      const photoThumb = l.photo 
-        ? `<img src="${l.photo}" style="height: 36px; width: 36px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.viewImage('${l.photo}')">`
-        : '-';
-
-      const typeBadgeClass = l.type === 'เบิกจ่าย' ? 'badge-warning' : (l.type === 'รับเข้า' ? 'badge-success' : 'badge-info');
-
-      return `
-        <tr>
-          <td style="white-space: nowrap; font-size: 12.5px;">${formattedDate}</td>
-          <td><span class="badge ${typeBadgeClass}">${l.type}</span></td>
-          <td><strong style="font-family: monospace;">${l.code}</strong></td>
-          <td>${l.name}</td>
-          <td style="text-align: center; font-weight: 700;">${l.qty} ${l.unit}</td>
-          <td style="text-align: center; font-size: 12.5px;">${l.balanceBefore} ➔ <strong>${l.balanceAfter}</strong></td>
-          <td>${l.requester}</td>
-          <td style="font-size: 12.5px; font-family: monospace;">${l.workOrder || '-'}</td>
-          <td style="text-align: center;">${sigThumb}</td>
-          <td style="text-align: center;">${photoThumb}</td>
-        </tr>
-      `;
-    }).join('');
+          return `
+            <div class="stock-item-card" style="margin-bottom: 12px;">
+              <div class="stock-item-header">
+                <span class="badge ${typeBadgeClass}">${l.type}</span>
+                <span style="font-size: 12px; color: var(--text-muted);">${formattedDate}</span>
+              </div>
+              <div style="margin-top: 6px;">
+                <div style="font-family: monospace; font-weight: 700; color: var(--pea-primary); font-size: 13px;">${l.code}</div>
+                <div style="font-weight: 600; font-size: 14px; margin-top: 2px;">${l.name}</div>
+              </div>
+              <div class="stock-item-meta" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0;">
+                <div class="meta-col">
+                  <div class="meta-label">จำนวนทำรายการ</div>
+                  <div class="meta-val" style="color: var(--pea-primary); font-size: 15px;">${l.qty} ${l.unit}</div>
+                </div>
+                <div class="meta-col">
+                  <div class="meta-label">ยกมา ➔ คงเหลือ</div>
+                  <div class="meta-val" style="font-size: 13.5px;">${l.balanceBefore} ➔ <strong>${l.balanceAfter}</strong></div>
+                </div>
+                <div class="meta-col">
+                  <div class="meta-label">ผู้ทำรายการ</div>
+                  <div class="meta-val" style="font-size: 13px; font-weight: 600;">${l.requester}</div>
+                </div>
+              </div>
+              ${(l.workOrder || l.note) ? `
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px; background: rgba(0,0,0,0.02); padding: 6px 8px; border-radius: 6px;">
+                  ${l.workOrder ? `<div><strong>WorkOrder:</strong> ${l.workOrder}</div>` : ''}
+                  ${l.note ? `<div><strong>หมายเหตุ:</strong> ${l.note}</div>` : ''}
+                </div>
+              ` : ''}
+              ${(sigThumb || photoThumb) ? `
+                <div style="display: flex; gap: 6px; margin-top: 8px; justify-content: flex-end;">
+                  ${sigThumb}
+                  ${photoThumb}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+    }
   }
 
   // Export CSV

@@ -445,14 +445,18 @@
         <div class="panel-header">
           <h2 class="panel-title"><i class="fa-solid fa-history"></i> ประวัติรายการเบิก-รับ-ตรวจนับย้อนหลัง</h2>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <input type="text" id="logSearchInput" class="form-control" placeholder="🔍 ค้นหาประวัติ..." style="max-width: 200px;" oninput="app.renderLogsTable()">
+            <input type="text" id="logSearchInput" class="form-control" placeholder="🔍 ค้นหาประวัติ..." style="max-width: 180px;" oninput="app.renderLogsTable()">
+            <button class="btn btn-primary btn-sm" onclick="app.manualForceSync()" title="ดึงประวัติสดจาก Google Sheets">
+              <i class="fa-solid fa-arrows-rotate"></i> ซิงก์ประวัติสด
+            </button>
             <button class="btn btn-outline btn-sm" onclick="app.exportLogsCSV()">
               <i class="fa-solid fa-file-excel"></i> ส่งออก CSV
             </button>
           </div>
         </div>
 
-        <div class="table-responsive">
+        <!-- Desktop Table View -->
+        <div class="table-responsive desktop-view-only">
           <table class="custom-table" id="logsTable">
             <thead>
               <tr>
@@ -472,6 +476,11 @@
               <!-- Rendered dynamically -->
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Cards View for Logs -->
+        <div id="mobileLogsCardsContainer" class="mobile-view-only" style="margin-top: 10px;">
+          <!-- Rendered dynamically -->
         </div>
       </div>
     </section>
