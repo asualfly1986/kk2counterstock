@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>คลังพัสดุการไฟฟ้าส่วนภูมิภาค ผปบ.กฟส.ขอนแก่น2</title>
+  
+  <!-- Mobile PWA Meta Tags -->
+  <meta name="theme-color" content="#312e81">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ผปบ.กฟส.ขอนแก่น2">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- HTML5 QR/Barcode Scanner CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  
+  <!-- JsBarcode Code 128 Generator CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Header Navigation Bar -->
+  <header class="top-header">
+    <div class="header-container">
+      <div class="brand-logo">
+        <img src="img/pea_logo.png" alt="PEA Logo" style="height: 44px; width: 44px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));">
+        <div>
+          <h1 class="brand-title">⚡ คลังพัสดุการไฟฟ้าส่วนภูมิภาค ผปบ.กฟส.ขอนแก่น2</h1>
+          <p class="brand-subtitle">บริหารจัดการเบิกนับคลัง</p>
+        </div>
+      </div>
+      <div class="header-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div id="liveSyncBadge" class="badge badge-success" style="font-size: 11.5px; padding: 5px 10px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25); cursor: pointer;" onclick="app.manualForceSync()" title="แตะเพื่อซิงก์ข้อมูลสด">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #ffffff; display: inline-block; animation: pulse 1.5s infinite;"></span>
+          <span>⚡ ซิงก์อัตโนมัติ (Live)</span>
+        </div>
+        <button type="button" class="btn btn-gold btn-sm" onclick="app.switchTab('settings')" style="font-size: 12.5px; font-weight: 600; padding: 7px 12px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);">
+          <i class="fa-solid fa-link"></i> 🔗 Google Apps Script Web App URL
+        </button>
+        <span class="brand-badge" style="font-size: 12px; padding: 4px 10px;">ผปบ.กฟส.ขอนแก่น2</span>
+        <img src="img/pea_logo.png" alt="การไฟฟ้าส่วนภูมิภาค PEA Logo" style="height: 44px; width: 44px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));">
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs Bar (Desktop) -->
+  <nav class="nav-tabs-container">
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="dashboard" onclick="app.switchTab('dashboard')">
+        <i class="fa-solid fa-chart-pie"></i> 📊 ภาพรวมคลัง
+      </button>
+      <button class="tab-btn" data-tab="dispense" onclick="app.switchTab('dispense')">
+        <i class="fa-solid fa-hand-holding-box"></i> 📦 เบิกจ่ายพัสดุ
+      </button>
+      <button class="tab-btn" data-tab="audit" onclick="app.switchTab('audit')">
+        <i class="fa-solid fa-clipboard-check"></i> 📋 ตรวจนับคลัง (Count)
+      </button>
+      <button class="tab-btn" data-tab="print-barcodes" onclick="app.switchTab('print-barcodes')">
+        <i class="fa-solid fa-barcode"></i> 🏷️ พิมพ์ป้ายบาร์โค้ด
+      </button>
+      <button class="tab-btn" data-tab="history" onclick="app.switchTab('history')">
+        <i class="fa-solid fa-history"></i> 📜 ประวัติเบิก-รับ
+      </button>
+      <button class="tab-btn" data-tab="requesters" onclick="app.switchTab('requesters')">
+        <i class="fa-solid fa-users"></i> 👤 จัดการผู้เบิก
+      </button>
+    </div>
+  </nav>
+
+  <!-- Floating Camera Scanner Button (Mobile FAB) -->
+  <button class="fab-scan-btn" onclick="app.openCameraScanner('search')" title="สแกน บาร์โค้ด">
+    <i class="fa-solid fa-camera"></i>
+  </button>
+
+  <!-- Main Content Layout -->
+  <main class="main-content">
+
+    <!-- 1. DASHBOARD TAB -->
+    <section id="tab-dashboard" class="tab-content active">
+
+      <!-- Real Warehouse Photo Slider Showcase Carousel -->
+      <div class="warehouse-photo-slider" style="position: relative; border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow-md);">
+        <div class="slider-track" id="warehouseSliderTrack" style="display: flex; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); width: 200%;">
+          <!-- Slide 1 -->
+          <div class="slide" style="width: 50%; flex-shrink: 0; position: relative; height: 260px;">
+            <img src="img/wh_real_1.jpg" alt="คลังพัสดุ ผปบ.กฟส.ขอนแก่น2 ภาพที่ 1" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.72);">
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 22px; background: linear-gradient(transparent, rgba(30, 27, 75, 0.92)); color: #ffffff;">
+              <span class="badge badge-gold" style="margin-bottom: 6px;"><i class="fa-solid fa-warehouse"></i> ภาพบรรยากาศจริงคลังพัสดุ 1</span>
+              <h2 style="font-size: 19px; font-weight: 700; color: #ffffff; margin-bottom: 2px;">🏢 คลังพัสดุการไฟฟ้าส่วนภูมิภาค ผปบ.กฟส.ขอนแก่น2</h2>
+              <p style="font-size: 13px; color: #e2e8f0; opacity: 0.95;">โซนจัดเก็บอุปกรณ์ สลักเกลียว แร็ค และอุปกรณ์ต่อสายไฟ</p>
+            </div>
+          </div>
+          <!-- Slide 2 -->
+          <div class="slide" style="width: 50%; flex-shrink: 0; position: relative; height: 260px;">
+            <img src="img/wh_real_2.jpg" alt="คลังพัสดุ ผปบ.กฟส.ขอนแก่น2 ภาพที่ 2" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.72);">
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 22px; background: linear-gradient(transparent, rgba(30, 27, 75, 0.92)); color: #ffffff;">
+              <span class="badge badge-gold" style="margin-bottom: 6px;"><i class="fa-solid fa-warehouse"></i> ภาพบรรยากาศจริงคลังพัสดุ 2</span>
+              <h2 style="font-size: 19px; font-weight: 700; color: #ffffff; margin-bottom: 2px;">⚡ โซนจัดเก็บสายไฟฟ้าและอุปกรณ์ความปลอดภัย</h2>
+              <p style="font-size: 13px; color: #e2e8f0; opacity: 0.95;">บริหารจัดการเบิกนับคลัง ตรวจสอบสต็อกพัสดุคงเหลือจริง</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slider Navigation Controls -->
+        <button type="button" class="slider-btn prev" onclick="app.prevWarehouseSlide()" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: rgba(15, 23, 42, 0.6); color: #ffffff; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); font-size: 16px;">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button type="button" class="slider-btn next" onclick="app.nextWarehouseSlide()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: rgba(15, 23, 42, 0.6); color: #ffffff; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); font-size: 16px;">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <!-- Slider Indicators Dots -->
+        <div style="position: absolute; bottom: 12px; right: 20px; display: flex; gap: 6px; z-index: 10;">
+          <span class="slider-dot active" id="slideDot0" onclick="app.goToWarehouseSlide(0)" style="width: 24px; height: 8px; border-radius: 4px; background: var(--pea-gold); cursor: pointer; transition: all 0.3s;"></span>
+          <span class="slider-dot" id="slideDot1" onclick="app.goToWarehouseSlide(1)" style="width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></span>
+        </div>
+      </div>
+      <!-- Stat Summary Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon primary"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div>
+            <div class="stat-value" id="statTotalSKU">114</div>
+            <div class="stat-label">รายการพัสดุทั้งหมด</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <div class="stat-value" id="statLowStock">0</div>
+            <div class="stat-label">ต่ำกว่าเกณฑ์มาตรฐาน</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon danger"><i class="fa-solid fa-circle-xmark"></i></div>
+          <div>
+            <div class="stat-value" id="statOutOfStock">0</div>
+            <div class="stat-label">สินค้าหมดคลัง (0)</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon success"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+          <div>
+            <div class="stat-value" id="statTotalTx">0</div>
+            <div class="stat-label">รายการเบิก-นับรวม</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory Table & Category Filter -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="fa-solid fa-list-check"></i> รายการพัสดุและสต็อกคงเหลือจริง (Storage Location 2601)</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 480px;">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 ค้นหารหัส / ชื่อพัสดุ / ยิงบาร์โค้ด..." oninput="app.renderStockTable()" style="flex: 1; min-width: 180px;">
+            <button type="button" class="btn btn-primary" onclick="app.openCameraScanner('search')">
+              <i class="fa-solid fa-camera"></i> สแกนบาร์โค้ด
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('searchInput').value=''; app.renderStockTable();" title="ล้างการค้นหา">
+              <i class="fa-solid fa-rotate-left"></i> ล้าง
+            </button>
+          </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="category-pills" id="categoryPills">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Mobile Card List View (For Smartphones) -->
+        <div class="mobile-stock-cards" id="mobileStockCards">
+          <!-- Rendered dynamically for Mobile -->
+        </div>
+
+        <!-- Table View (For Desktop/Tablets) -->
+        <div class="table-responsive desktop-table-container" style="margin-top: 16px;">
+          <table class="custom-table" id="stockTable">
+            <thead>
+              <tr>
+                <th style="text-align: center; width: 65px;">ลำดับ</th>
+                <th>รหัสพัสดุ (Barcode)</th>
+                <th>ชื่อพัสดุ</th>
+                <th>หมวดหมู่</th>
+                <th style="text-align: center;">เกณฑ์มาตรฐาน</th>
+                <th style="text-align: center;">คงเหลือจริง (2601)</th>
+                <th>หน่วยนับ</th>
+                <th style="text-align: center;">ทำรายการ</th>
+              </tr>
+            </thead>
+            <tbody id="stockTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 2. DISPENSE / REQUISITION TAB -->
+    <section id="tab-dispense" class="tab-content" style="display: none;">
+      <div class="panel-card" style="max-width: 800px; margin: 0 auto;">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="fa-solid fa-hand-holding-box"></i> ฟอร์มเบิกจ่ายพัสดุ</h2>
+          <span class="badge badge-info">สแกน Barcode / ยิงสแกนเนอร์ได้ทันที</span>
+        </div>
+
+        <form id="dispenseForm" onsubmit="event.preventDefault(); app.submitDispense();">
+          <div class="form-group">
+            <label class="form-label">📷 รหัสบาร์โค้ดพัสดุ / ยิงสแกนเนอร์ USB</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="dispenseBarcodeInput" class="form-control" placeholder="ยิงสแกนบาร์โค้ด หรือพิมพ์รหัส..." required onchange="app.onDispenseBarcodedEntered()">
+              <button type="button" class="btn btn-primary" onclick="app.openCameraScanner('dispense')">
+                <i class="fa-solid fa-camera"></i> สแกน
+              </button>
+            </div>
+          </div>
+
+          <div id="dispenseItemPreview" style="display: none; background: rgba(49, 46, 129, 0.05); border: 1px solid rgba(49, 46, 129, 0.2); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--pea-primary);" id="previewItemName">-</div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">
+              รหัส: <span id="previewItemCode" style="font-family: monospace; font-weight: 700;">-</span> | 
+              หมวดหมู่: <span id="previewItemCategory">-</span>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap;">
+              <div class="badge badge-info" style="font-size: 13px;">
+                เกณฑ์มาตรฐาน: <strong id="previewItemStandard">0</strong> <span class="previewUnit">-</span>
+              </div>
+              <div class="badge badge-success" style="font-size: 13px;">
+                คงเหลือปัจจุบัน: <strong id="previewItemCurrent">0</strong> <span class="previewUnit">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">🔢 จำนวนที่ต้องการเบิก</label>
+              <input type="number" id="dispenseQtyInput" class="form-control" min="1" value="1" inputmode="numeric" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">👤 ชื่อผู้เบิกพัสดุ (พิมพ์หรือเลือก)</label>
+              <div style="position: relative;">
+                <input type="text" id="dispenseRequesterSelect" class="form-control" list="requestersDatalist" placeholder="🔍 พิมพ์หรือเลือกรายชื่อผู้เบิก..." required autocomplete="off" style="padding-right: 36px;">
+                <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--pea-primary); font-size: 14px; opacity: 0.85;"></i>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">📜 เลขที่ใบสั่งงาน / Work Order (ถ้ามี)</label>
+              <input type="text" id="dispenseWorkOrderInput" class="form-control" placeholder="เช่น WO-690123">
+            </div>
+            <div class="form-group">
+              <label class="form-label">📝 หมายเหตุเพิ่มเติม (เลือกเหตุผล หรือพิมพ์ระบุ)</label>
+              <div style="position: relative;">
+                <input type="text" id="dispenseNoteInput" class="form-control" list="dispenseNotesDatalist" placeholder="เลือกเหตุผลการเบิก หรือพิมพ์ระบุ..." autocomplete="off" style="padding-right: 36px;">
+                <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--pea-primary); font-size: 14px; opacity: 0.85;"></i>
+              </div>
+              <datalist id="dispenseNotesDatalist">
+                <option value="เบิกเพื่อเติมใส่รถ"></option>
+                <option value="เบิกเพื่อใช้ในงานไฟไหม้"></option>
+                <option value="เบิกเพื่อยืมในงานPM"></option>
+                <option value="เบิกเพื่อให้การไฟฟ้าอื่นยืมชั่วคร่าว"></option>
+              </datalist>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                <button type="button" class="badge" style="background: rgba(49, 46, 129, 0.08); color: var(--pea-primary); border: 1px solid rgba(49, 46, 129, 0.2); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('dispenseNoteInput').value = 'เบิกเพื่อเติมใส่รถ'">🚗 เติมใส่รถ</button>
+                <button type="button" class="badge" style="background: rgba(220, 38, 38, 0.08); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.2); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('dispenseNoteInput').value = 'เบิกเพื่อใช้ในงานไฟไหม้'">🔥 งานไฟไหม้</button>
+                <button type="button" class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--pea-gold-hover); border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('dispenseNoteInput').value = 'เบิกเพื่อยืมในงานPM'">🛠️ ยืมงาน PM</button>
+                <button type="button" class="badge" style="background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('dispenseNoteInput').value = 'เบิกเพื่อให้การไฟฟ้าอื่นยืมชั่วคร่าว'">🤝 ให้ กฟฟ. อื่นยืมชั่วคราว</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🖼️ แนบรูปถ่ายพัสดุ / หลักฐานประกอบการเบิก</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+              <button type="button" class="btn btn-primary" onclick="document.getElementById('dispensePhotoCamera').click()" style="padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-camera" style="font-size: 18px;"></i> <span>ถ่ายรูปด้วยกล้อง</span>
+              </button>
+              <button type="button" class="btn btn-outline" onclick="document.getElementById('dispensePhotoFile').click()" style="padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-images" style="font-size: 18px;"></i> <span>เลือกจากคลังภาพ</span>
+              </button>
+            </div>
+            <input type="file" id="dispensePhotoCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handlePhotoSelect(event, 'dispense')">
+            <input type="file" id="dispensePhotoFile" accept="image/*" style="display: none;" onchange="app.handlePhotoSelect(event, 'dispense')">
+            
+            <div id="dispensePhotoPreviewContainer" style="margin-top: 10px; display: none;">
+              <img id="dispensePhotoPreviewImg" class="preview-thumbnail" alt="รูปถ่ายแนบ">
+              <button type="button" class="btn btn-danger btn-sm" onclick="app.clearPhoto('dispense')" style="margin-top: 6px;">ลบรูปแนบ</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">✍️ ลายเซ็นดิจิทัล ผู้เบิกพัสดุ (Digital Signature)</label>
+            <div class="signature-box">
+              <canvas id="dispenseSignatureCanvas" class="signature-canvas" width="600" height="180"></canvas>
+              <div class="signature-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="app.dispenseSigPad.undo()">
+                  <i class="fa-solid fa-rotate-left"></i> ย้อนกลับ
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="app.dispenseSigPad.clear()">
+                  <i class="fa-solid fa-trash"></i> ล้างลายเซ็น
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-gold" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 12px;">
+            <i class="fa-solid fa-check-circle"></i> ยืนยันการเบิกจ่ายพัสดุ
+          </button>
+        </form>
+      </div>
+    </section>
+
+
+    <!-- 3. INVENTORY COUNT / AUDIT TAB -->
+    <section id="tab-audit" class="tab-content" style="display: none;">
+      <div class="panel-card" style="max-width: 800px; margin: 0 auto;">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="fa-solid fa-clipboard-check"></i> โหมดตรวจนับคลัง และปรับยอดคงเหลือจริง</h2>
+          <span class="badge badge-warning">Count & Stock Adjustment</span>
+        </div>
+
+        <form id="auditForm" onsubmit="event.preventDefault(); app.submitAudit();">
+          <div class="form-group">
+            <label class="form-label">📷 รหัสบาร์โค้ดพัสดุที่ต้องการตรวจนับ</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="auditBarcodeInput" class="form-control" placeholder="ยิงบาร์โค้ดเพื่อค้นหา..." required onchange="app.onAuditBarcodedEntered()">
+              <button type="button" class="btn btn-primary" onclick="app.openCameraScanner('audit')">
+                <i class="fa-solid fa-camera"></i> สแกน
+              </button>
+            </div>
+          </div>
+
+          <div id="auditItemPreview" style="display: none; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--pea-primary);" id="auditPreviewName">-</div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">
+              รหัส: <span id="auditPreviewCode" style="font-family: monospace; font-weight: 700;">-</span>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap;">
+              <div class="badge badge-info">เกณฑ์มาตรฐาน: <strong id="auditPreviewStandard">0</strong></div>
+              <div class="badge badge-success">ยอดในระบบปัจจุบัน: <strong id="auditPreviewCurrent">0</strong></div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">📊 จำนวนที่นับได้จริงในคลัง (Actual Count)</label>
+              <input type="number" id="auditNewQtyInput" class="form-control" min="0" inputmode="numeric" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">👤 ผู้ตรวจนับคลัง (พิมพ์หรือเลือก)</label>
+              <div style="position: relative;">
+                <input type="text" id="auditRequesterSelect" class="form-control" list="requestersDatalist" placeholder="🔍 พิมพ์หรือเลือกผู้ตรวจนับ..." required autocomplete="off" style="padding-right: 36px;">
+                <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--pea-primary); font-size: 14px; opacity: 0.85;"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Requesters Searchable Datalist -->
+          <datalist id="requestersDatalist">
+            <!-- Rendered dynamically -->
+          </datalist>
+
+          <div class="form-group">
+            <label class="form-label">📝 หมายเหตุการตรวจนับ / สาเหตุการปรับยอด (เลือกสาเหตุ หรือพิมพ์ระบุ)</label>
+            <div style="position: relative;">
+              <input type="text" id="auditNoteInput" class="form-control" list="auditNotesDatalist" placeholder="เลือกสาเหตุการปรับยอด หรือพิมพ์ระบุ..." autocomplete="off" style="padding-right: 36px;">
+              <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--pea-primary); font-size: 14px; opacity: 0.85;"></i>
+            </div>
+            <datalist id="auditNotesDatalist">
+              <option value="ตรวจนับประจำสัปดาห์"></option>
+              <option value="ตรวจนับเพื่อเช็คยอดก่อนปิดคลัง"></option>
+              <option value="ตรวจนับเพื่อกระทบยอดจำเป็น"></option>
+            </datalist>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+              <button type="button" class="badge" style="background: rgba(49, 46, 129, 0.08); color: var(--pea-primary); border: 1px solid rgba(49, 46, 129, 0.2); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('auditNoteInput').value = 'ตรวจนับประจำสัปดาห์'">📅 ประจำสัปดาห์</button>
+              <button type="button" class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--pea-gold-hover); border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('auditNoteInput').value = 'ตรวจนับเพื่อเช็คยอดก่อนปิดคลัง'">🔒 เช็คยอดก่อนปิดคลัง</button>
+              <button type="button" class="badge" style="background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); cursor: pointer; padding: 5px 8px; font-size: 12px;" onclick="document.getElementById('auditNoteInput').value = 'ตรวจนับเพื่อกระทบยอดจำเป็น'">⚖️ กระทบยอดจำเป็น</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🖼️ แนบรูปถ่ายพัสดุขณะตรวจนับ (ถ้ามี)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+              <button type="button" class="btn btn-primary" onclick="document.getElementById('auditPhotoCamera').click()" style="padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-camera" style="font-size: 18px;"></i> <span>ถ่ายรูปด้วยกล้อง</span>
+              </button>
+              <button type="button" class="btn btn-outline" onclick="document.getElementById('auditPhotoFile').click()" style="padding: 12px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-images" style="font-size: 18px;"></i> <span>เลือกจากคลังภาพ</span>
+              </button>
+            </div>
+            <input type="file" id="auditPhotoCamera" accept="image/*" capture="environment" style="display: none;" onchange="app.handlePhotoSelect(event, 'audit')">
+            <input type="file" id="auditPhotoFile" accept="image/*" style="display: none;" onchange="app.handlePhotoSelect(event, 'audit')">
+            
+            <div id="auditPhotoPreviewContainer" style="margin-top: 10px; display: none;">
+              <img id="auditPhotoPreviewImg" class="preview-thumbnail" alt="รูปนับคลัง">
+              <button type="button" class="btn btn-danger btn-sm" onclick="app.clearPhoto('audit')" style="margin-top: 6px;">ลบรูป</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 12px;">
+            <i class="fa-solid fa-save"></i> บันทึกการตรวจนับและอัปเดตยอดคงเหลือจริง
+          </button>
+        </form>
+      </div>
+    </section>
+
+
+    <!-- 4. BARCODE LABEL PRINTING TAB -->
+    <section id="tab-print-barcodes" class="tab-content" style="display: none;">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="fa-solid fa-barcode"></i> พิมพ์ป้ายบาร์โค้ดพัสดุ (Code 128 Label Sticker)</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="printBarcodeSearchInput" class="form-control" placeholder="🔍 ค้นหารายการป้ายที่ต้องการ..." style="max-width: 240px;" oninput="app.renderPrintableBarcodes()">
+            <button class="btn btn-gold" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> 🖨️ สั่งพิมพ์ป้ายสติ๊กเกอร์ (Print)
+            </button>
+          </div>
+        </div>
+
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+          ป้ายบาร์โค้ดถูกออกแบบตามมาตรฐาน Code 128 สำหรับนำไปแปะสติ๊กเกอร์ติดชั้นวางพัสดุ ยิงสแกนเนอร์ได้ทันที
+        </p>
+
+        <!-- Printable Barcode Cards Grid -->
+        <div id="printableBarcodeSection" class="barcode-labels-grid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 5. TRANSACTION LOGS HISTORY TAB -->
+    <section id="tab-history" class="tab-content" style="display: none;">
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="fa-solid fa-history"></i> ประวัติรายการเบิก-รับ-ตรวจนับย้อนหลัง</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="logSearchInput" class="form-control" placeholder="🔍 ค้นหาประวัติ..." style="max-width: 200px;" oninput="app.renderLogsTable()">
+            <button class="btn btn-outline btn-sm" onclick="app.exportLogsCSV()">
+              <i class="fa-solid fa-file-excel"></i> ส่งออก CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table" id="logsTable">
+            <thead>
+              <tr>
+                <th>วัน-เวลา</th>
+                <th>ประเภท</th>
+                <th>รหัสพัสดุ</th>
+                <th>ชื่อพัสดุ</th>
+                <th style="text-align: center;">จำนวน</th>
+                <th style="text-align: center;">ยอดยกมา ➔ ยอดคงเหลือ</th>
+                <th>ผู้ทำรายการ</th>
+                <th>Work Order</th>
+                <th style="text-align: center;">ลายเซ็น</th>
+                <th style="text-align: center;">รูปแนบ</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 6. REQUESTERS MANAGEMENT TAB -->
+    <section id="tab-requesters" class="tab-content" style="display: none;">
+      <div class="panel-card" style="max-width: 700px; margin: 0 auto;">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="fa-solid fa-users"></i> จัดการรายชื่อผู้เบิกพัสดุ</h2>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+          <input type="text" id="newRequesterNameInput" class="form-control" placeholder="กรอกชื่อ-นามสกุล ผู้เบิกใหม่...">
+          <button class="btn btn-primary" onclick="app.handleAddRequester()">
+            <i class="fa-solid fa-plus"></i> เพิ่ม
+          </button>
+        </div>
+
+        <div id="requestersListContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- 7. GOOGLE SHEETS SETTINGS TAB -->
+    <section id="tab-settings" class="tab-content" style="display: none;">
+      <div class="panel-card" style="max-width: 800px; margin: 0 auto;">
+        <div class="form-group">
+          <label class="form-label">🔗 Google Apps Script Web App URL</label>
+          <input type="url" id="gasUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/AKfycbx.../exec">
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="app.saveGasUrl()">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึก URL
+          </button>
+          <button class="btn btn-gold" onclick="app.testGasConnection()">
+            <i class="fa-solid fa-plug"></i> ทดสอบการเชื่อมต่อ
+          </button>
+          <button class="btn btn-outline" onclick="app.openScriptModal()">
+            <i class="fa-solid fa-code"></i> คัดลอกสคริปต์
+          </button>
+          <button class="btn btn-danger" onclick="app.resetCache()">
+            <i class="fa-solid fa-rotate"></i> 🔄 อัปเดตรายการใหม่ล่าสุด (Reset Cache)
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Fixed Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav">
+    <div class="mobile-bottom-nav-inner">
+      <button class="mobile-nav-btn active" data-tab="dashboard" onclick="app.switchTab('dashboard')">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>ภาพรวม</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="dispense" onclick="app.switchTab('dispense')">
+        <i class="fa-solid fa-hand-holding-box"></i>
+        <span>เบิกจ่าย</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="audit" onclick="app.switchTab('audit')">
+        <i class="fa-solid fa-clipboard-check"></i>
+        <span>นับคลัง</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="print-barcodes" onclick="app.switchTab('print-barcodes')">
+        <i class="fa-solid fa-barcode"></i>
+        <span>พิมพ์ป้าย</span>
+      </button>
+      <button class="mobile-nav-btn" data-tab="history" onclick="app.switchTab('history')">
+        <i class="fa-solid fa-history"></i>
+        <span>ประวัติ</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- CAMERA SCANNER MODAL -->
+  <div class="modal-overlay" id="cameraModal" hidden>
+    <div class="modal-content" style="max-width: 440px; text-align: center;">
+      <h3 style="font-size: 17px; font-weight: 700; color: var(--pea-primary); margin-bottom: 10px;">
+        <i class="fa-solid fa-camera"></i> สแกน บาร์โค้ด พัสดุ
+      </h3>
+      <div id="readerContainer"></div>
+      <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 8px;">
+        ส่องกล้องโทรศัพท์ไปที่บาร์โค้ดเพื่ออ่านรหัสอัตโนมัติ
+      </p>
+      <button class="btn btn-outline" style="margin-top: 14px; width: 100%;" onclick="app.closeCameraScanner()">
+        ปิดกล้องสแกน
+      </button>
+    </div>
+  </div>
+
+  <!-- GOOGLE APPS SCRIPT CODE MODAL -->
+  <div class="modal-overlay" id="scriptModal" hidden>
+    <div class="modal-content" style="max-width: 700px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 17px; font-weight: 700; color: var(--pea-primary);">
+          <i class="fa-solid fa-code"></i> โค้ด Google Apps Script (Code.gs)
+        </h3>
+        <button class="btn btn-primary btn-sm" onclick="app.copyScriptCode()">
+          <i class="fa-solid fa-copy"></i> คัดลอกโค้ด
+        </button>
+      </div>
+      <textarea id="scriptCodeTextarea" class="form-control" rows="14" readonly style="font-family: monospace; font-size: 11.5px; background: #f8fafc; color: #1e293b;"></textarea>
+      <button class="btn btn-outline" style="margin-top: 14px; width: 100%;" onclick="document.getElementById('scriptModal').hidden = true">
+        ปิดหน้าต่าง
+      </button>
+    </div>
+  </div>
+
+  <!-- FULL IMAGE VIEWER MODAL -->
+  <div class="modal-overlay" id="imageViewerModal" hidden onclick="this.hidden = true">
+    <div style="max-width: 90vw; max-height: 90vh; text-align: center;" onclick="event.stopPropagation()">
+      <img id="imageViewerImg" src="" alt="รูปภาพขยาย" style="max-width: 100%; max-height: 80vh; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+      <div style="margin-top: 12px;">
+        <button class="btn btn-outline" style="background: #ffffff;" onclick="document.getElementById('imageViewerModal').hidden = true">ปิดรูปภาพ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Alerts Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/masterData.js"></script>
+  <script src="js/signaturePad.js"></script>
+  <script src="js/barcodeScanner.js"></script>
+  <script src="js/googleSheets.js"></script>
+  <script src="js/database.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
